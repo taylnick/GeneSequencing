@@ -50,7 +50,7 @@ class GeneSequencing:
                     # score, alignment1 and alignment2
                     algo_output = []
                     if banded:
-                        algo_output = self.banded_algorithm(sequences.pop(), sequences[j])
+                        algo_output = self.banded_algorithm(sequences[i], sequences[j])
                     else:
                         algo_output = self.unrestricted_algorithm(sequences[i], sequences[j])
 
@@ -69,8 +69,8 @@ class GeneSequencing:
     # TODO: Implement unrestricted_algorithm
     def unrestricted_algorithm(self, vert, hori):
         # Cost Table
-        n = len(vert) if len(vert) < self.MaxCharactersToAlign else self.MaxCharactersToAlign
-        m = len(hori) if len(hori) < self.MaxCharactersToAlign else self.MaxCharactersToAlign
+        n = len(vert)+1 if len(vert) < self.MaxCharactersToAlign else self.MaxCharactersToAlign + 1
+        m = len(hori)+1 if len(hori) < self.MaxCharactersToAlign else self.MaxCharactersToAlign + 1
         CT = [[0] * m for x in range(n)]
         # Back Pointer array
         BP = [['n'] * m for x in range(n)]
@@ -89,8 +89,8 @@ class GeneSequencing:
         # Fill in the rest of the table.
         for i in range(1, n):
             for j in range(1, m):
-
-                diag = self.match_sub(vert[i], hori[j]) + CT[i - 1][j - 1]
+                match_or_sub = MATCH if vert[i-1] == hori[j-1] else SUB
+                diag = match_or_sub + CT[i - 1][j - 1]
                 left = INDEL + CT[i][j - 1]
                 above = INDEL + CT[i - 1][j]
                 min_num = min(left, above, diag)
@@ -113,48 +113,93 @@ class GeneSequencing:
 
         while i != 0 and j != 0:
             curr = BP[i][j]
-            if curr == 'l':
-                vert_align = '-' + vert_align
+            if curr == "d":
                 i -= 1
-            elif curr == 'a':
-                hori_align = '-' + hori_align
                 j -= 1
-            elif curr == "d":
                 vert_align = vert[i] + vert_align
                 hori_align = hori[j] + hori_align
-                i -= 1
+            elif curr == 'l':
                 j -= 1
+                vert_align = '-' + vert_align
+                hori_align = hori[j] + hori_align
+            elif curr == 'a':
+                i -= 1
+                hori_align = '-' + hori_align
+                vert_align = vert[i] + vert_align
             elif curr == 'n':
                 # unreachable, no solution.
                 return[math.inf, 'No Alignment Possible', 'No Alignment Possible']
-        if i == 0:
-            hori_align = hori[:j+1] + hori_align
-            vert_align = vert[i] + vert_align
-        else:
-            vert_align = vert[:i+1] + vert_align
-            hori_align = hori[j] + hori_align
-
-        # if i == 0 and j == 0:
-        #     vert_align = vert[i] + vert_align
-        #     hori_align = hori[j] + hori_align
-
-
-
 
         # #return the cost to be populated in the GUI.
         # vert_align and hori_align are needed to show what the end result is.
         cost = CT[-1][-1]
         return [cost, vert_align, hori_align]
 
-    # function to check if two characters are identical or if a substitution is necessary.
-    # returns an int.
-    def match_sub(self, char1, char2):
-        return MATCH if char1 == char2 else SUB
-
     # TODO: Implement banded_algorithm
     def banded_algorithm(self, vert, hori):
-        cost = int
-        vert_align = str
-        hori_align = str
+        # Cost Table
+        n = len(vert) + 1 if len(vert) < self.MaxCharactersToAlign else self.MaxCharactersToAlign + 1
+        m = len(hori) + 1 if len(hori) < self.MaxCharactersToAlign else self.MaxCharactersToAlign + 1
+        CT = [[0] * m for x in range(n)]
+        # Back Pointer array
+        BP = [['n'] * m for x in range(n)]
+        vert_align = ""
+        hori_align = ""
 
+        # initialize values for row and column 0
+        for each in range(n):
+            CT[each][0] = each * INDEL
+            BP[each][0] = 'a'
+        for each in range(m):
+            CT[0][each] = each * INDEL
+            BP[0][each] = 'l'
+        # Make sure the 0,0 spot is 'n'. The above loops reset it.
+        BP[0][0] = 'n'
+        # Fill in the rest of the table.
+        for i in range(1, n):
+            for j in range(1, m):
+                match_or_sub = MATCH if vert[i - 1] == hori[j - 1] else SUB
+                diag = match_or_sub + CT[i - 1][j - 1]
+                left = INDEL + CT[i][j - 1]
+                above = INDEL + CT[i - 1][j]
+                min_num = min(left, above, diag)
+                # Check what the minimum number is and assign the value to the cell along with an int
+                # corresponding to the direction of the backpointer. d is diagonal, l is left, and a is above and n is none.
+
+                if min_num == left:
+                    CT[i][j] = left
+                    BP[i][j] = 'l'
+                elif min_num == above:
+                    CT[i][j] = above
+                    BP[i][j] = 'a'
+                elif min_num == diag:
+                    CT[i][j] = diag
+                    BP[i][j] = 'd'
+
+        # Create alignments from backpointer arrays.
+        i = n - 1
+        j = m - 1
+
+        while i != 0 and j != 0:
+            curr = BP[i][j]
+            if curr == "d":
+                i -= 1
+                j -= 1
+                vert_align = vert[i] + vert_align
+                hori_align = hori[j] + hori_align
+            elif curr == 'l':
+                j -= 1
+                vert_align = '-' + vert_align
+                hori_align = hori[j] + hori_align
+            elif curr == 'a':
+                i -= 1
+                hori_align = '-' + hori_align
+                vert_align = vert[i] + vert_align
+            elif curr == 'n':
+                # unreachable, no solution.
+                return [math.inf, 'No Alignment Possible', 'No Alignment Possible']
+
+        # #return the cost to be populated in the GUI.
+        # vert_align and hori_align are needed to show what the end result is.
+        cost = CT[-1][-1]
         return [cost, vert_align, hori_align]
