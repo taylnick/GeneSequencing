@@ -41,7 +41,7 @@ class GeneSequencing:
         for i in range(len(sequences)):
             jresults = []
             for j in range(len(sequences)):
-
+                # TODO: Change this to <= to leave out the diagonal. or < to include it.
                 if j <= i:
                     s = {}
                 else:
@@ -66,7 +66,6 @@ class GeneSequencing:
             results.append(jresults)
         return results
 
-    # TODO: Implement unrestricted_algorithm
     def unrestricted_algorithm(self, vert, hori):
         # Cost Table
         n = len(vert) + 1 if len(vert) < self.MaxCharactersToAlign else self.MaxCharactersToAlign + 1
@@ -135,7 +134,6 @@ class GeneSequencing:
         cost = CT[-1][-1]
         return [cost, vert_align, hori_align]
 
-    # TODO: Implement banded_algorithm
     def banded_algorithm(self, vert, hori):
         # Cost Table
         n = len(vert) + 1 if len(vert) < self.MaxCharactersToAlign else self.MaxCharactersToAlign + 1
@@ -226,14 +224,16 @@ class GeneSequencing:
                     diag = match_or_sub + CT[i - 1][j]
                     left = INDEL + CT[i][j - 1]
                     above = INDEL + CT[i - 1][j + 1]
+                # TODO: fix this part. Not sure what's wrong with it. It will work for either seq 1, 2 or 3,
+                #  4 but not both.
                 else:
                     match_or_sub = MATCH if vert[i - 1] == hori[j + offset] else SUB
                     diag = match_or_sub + CT[i - 1][j]
                     left = INDEL + CT[i][j - 1]
                     above = math.inf
                 min_num = min(left, above, diag)
-                # Check what the minimum number is and assign the value to the cell along with an int
-                # corresponding to the direction of the backpointer. d is diagonal, l is left, and a is above and n is none.
+                # Check what the minimum number is and assign the value to the cell along with an int corresponding
+                # to the direction of the backpointer. d is diagonal, l is left, and a is above and n is none.
 
                 if min_num == left:
                     CT[i][j] = left
