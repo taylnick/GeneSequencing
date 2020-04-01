@@ -180,8 +180,10 @@ class Proj4GUI( QMainWindow ):
 		self.clearButton	= QPushButton('Clear')
 
 		self.banded		= QCheckBox('Banded')
-		self.banded.setChecked(False)
-		self.alignLength	  = QLineEdit('1000')
+		# TODO: Change before turning in
+		self.banded.setChecked(True)
+		self.alignLength	  = QLineEdit('3000')
+		####
 		font = QFont()
 		font.setFamily("Courier")
 		self.seq1_name	   = QLineEdit('')
