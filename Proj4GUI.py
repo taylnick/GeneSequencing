@@ -41,7 +41,7 @@ class Proj4GUI( QMainWindow ):
 	def processClicked(self):
 		sequences = [ self.seqs[i][2] for i in sorted(self.seqs.keys()) ]
 
-		#TODO: validate alignLength
+
 		self.statusBar.showMessage('Processing...')
 		app.processEvents()
 		start = time.time()
@@ -180,9 +180,8 @@ class Proj4GUI( QMainWindow ):
 		self.clearButton	= QPushButton('Clear')
 
 		self.banded		= QCheckBox('Banded')
-		# TODO: Change before turning in
-		self.banded.setChecked(True)
-		self.alignLength	  = QLineEdit('3000')
+		self.banded.setChecked(False)
+		self.alignLength	  = QLineEdit('1000')
 		####
 		font = QFont()
 		font.setFamily("Courier")
