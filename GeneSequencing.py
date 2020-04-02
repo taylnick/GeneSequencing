@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 from which_pyqt import PYQT_VER
-from numpy import numarray
 
 if PYQT_VER == 'PYQT5':
     from PyQt5.QtCore import QLineF, QPointF
@@ -54,14 +53,13 @@ class GeneSequencing:
                         algo_output = self.unrestricted_algorithm(sequences[i], sequences[j])
 
                     score, alignment1, alignment2 = algo_output
-                    print('\n' + str(i + 1) + ' vs ' + str(j + 1))
-                    print(alignment1)
-                    print(alignment2)
-                    print('Score: ' + str(score))
 
-                    # score = algo_output[0]
-                    # alignment1 = algo_output[1]
-                    # alignment2 = algo_output[2]
+                    # Thank you, Tyler!
+                    # print('\n' + str(i + 1) + ' vs ' + str(j + 1))
+                    # print(alignment1[:100])
+                    # print(alignment2[:100])
+                    # print('Score: ' + str(score))
+
                     ###################################################################################################
                     s = {'align_cost': score, 'seqi_first100': alignment1, 'seqj_first100': alignment2}
                     table.item(i, j).setText('{}'.format(int(score) if score != math.inf else score))
@@ -70,6 +68,8 @@ class GeneSequencing:
             results.append(jresults)
         return results
 
+# Unrestricted algorithm: takes two strings to be compared and outputs the score, and corresponding alignment strings.
+    # Author: Nathan Taylor CS 4412
     def unrestricted_algorithm(self, vert, hori):
         # Cost Table
         n = len(vert) + 1 if len(vert) < self.MaxCharactersToAlign else self.MaxCharactersToAlign + 1
@@ -138,12 +138,15 @@ class GeneSequencing:
         cost = CT[-1][-1]
         return [cost, vert_align, hori_align]
 
+# Banded n x k algorithm. Takes two strings and outputs the score with corresponding alignment strings.
+    # Author: Nathan Taylor CS 4412
     def banded_algorithm(self, vert, hori):
-        # Cost Table
+        # initialize n and m to the proper lengths.
         n = len(vert) + 1 if len(vert) < self.MaxCharactersToAlign else self.MaxCharactersToAlign + 1
         m = len(hori) + 1 if len(hori) < self.MaxCharactersToAlign else self.MaxCharactersToAlign + 1
         k = 2 * MAXINDELS + 1
 
+        # Cost Table
         CT = [[math.inf] * k for x in range(n)]
         # Back Pointer array
         BP = [['n'] * k for x in range(n)]
@@ -251,6 +254,7 @@ class GeneSequencing:
         if abs(i - j) >= 4:
             return [math.inf, 'No Alignment Possible', 'No Alignment Possible']
 
+        # Find the last non null entry to use as a beginning point for back propogation.
         x = n - 1
         y = k - 1
         direction = BP[x][y]
@@ -300,8 +304,8 @@ class GeneSequencing:
                 # unreachable, no solution.
                 return [math.inf, 'No Alignment Possible', 'No Alignment Possible']
 
-        # #return the cost to be populated in the GUI.
-        # vert_align and hori_align are needed to show what the end result is.
+        # return the cost to be populated in the GUI.
+        # Look for the last non-infinite entry.
         last = -1
         cost = CT[-1][last]
         while cost == math.inf:
